@@ -5,11 +5,20 @@ package com.example.student_v1;
 //      sxc acc verification
 //      app now directly takes student data from db
 
+/////////////////////////////////////////////////////////////////
+//
+// v2: includes all UI changes by rochele   date: 6/4/23
+//      fixed classTv issues
+//      added viewEvents
+//      added attended events
+
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -37,9 +46,9 @@ import java.util.HashMap;
 public class MainActivity extends BaseActivity {
 
     TextView nameTV,scoreTV, welcomeTV, uidTV, emailTV, className;
-    Button logoutBtn;
+    Button viewEventsBtn;
 
-    String name, uid;
+    String name, uid,classTitle;
     GoogleSignInOptions gso;
     GoogleSignInClient gsc;
     @SuppressLint("MissingInflatedId")
@@ -55,6 +64,7 @@ public class MainActivity extends BaseActivity {
         className=findViewById(R.id.class_tv2);
         submit=findViewById(R.id.qr_btn);
         emailTV = findViewById(R.id.email_tv2);
+        viewEventsBtn=findViewById(R.id.events_btn);
 
 //        verifying valid sxc acc starts here
         //nameTV=findViewById(R.id.textView);
@@ -91,10 +101,33 @@ public class MainActivity extends BaseActivity {
                         name= (String) switchMap.get("name");
                         uid= (String) s;
                         emailTV.setText((String) switchMap.get("email"));
-//                        className.setText((String) switchMap.get("class"));
+//                        className.setText(""+switchMap.get("class"));
+//                        className.setText(""+
+//                        database.getReference("class").child(""+switchMap.get("class")).get()
+//                        );
+                        database.getReference("class").child(""+switchMap.get("class")).get().addOnCompleteListener(new OnCompleteListener<DataSnapshot>() {
+                            @Override
+                            public void onComplete(@NonNull Task<DataSnapshot> task) {
+                                if (!task.isSuccessful()) {
+//                                    Log.e("firebase", "Error getting data", task.getException());
+                                }
+                                else {
+                                    className.setText(""+task.getResult().getValue());
+                                    classTitle =""+task.getResult().getValue();
+
+//                                    Log.d("firebase", String.valueOf(task.getResult().getValue()));
+                                }
+                            }
+                        });
 //                        scoreTV.setText( "Ecc score: "+(Long)switchMap.get("score"));
 //                        scoreMessage="Ecc score: "+switchMap.get("score");
                         scoreTV.setText(""+switchMap.get("score"));
+                        if (Integer.parseInt(""+switchMap.get("score"))>=10){
+                            scoreTV.setTextColor(Color.parseColor("#118042"));
+                        }else {
+                            scoreTV.setTextColor(Color.parseColor("#CF3737"));
+
+                        }
                         Log.d("database", "onDataChange: "+switchMap.get("score"));
                         flag=1;
                     }
@@ -121,10 +154,15 @@ public class MainActivity extends BaseActivity {
 //        });
 
 
+        viewEventsBtn.setOnClickListener(view -> {
+            Intent i = new Intent(this,ViewEvents.class);
+            startActivity(i);
+        });
         submit.setOnClickListener(view -> {
             Intent i = new Intent(this,MainActivity2.class);
 //            i.putExtra("message_key", name.getText()+"#"+uid.getText()+"#"+className.getText());
-            i.putExtra("message_key", name+"#"+uid+"#"+className);
+            i.putExtra("message_key", name+"#"+uid+"#"+classTitle);
+            Log.d("dbab", "onCreate: "+name+" "+uid+" "+classTitle);
             startActivity(i);
         });
 
